@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline DataOps — Chicago Crimes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/theme/night.css">
+<style>
+  .reveal h1 { font-size: 1.8em; color: #e74c3c; }
+  .reveal h2 { font-size: 1.3em; color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+  .reveal h3 { color: #2ecc71; font-size: 1em; }
+  .reveal pre code { font-size: 0.55em; max-height: 420px; }
+  .reveal ul { font-size: 0.82em; }
+  .reveal p  { font-size: 0.82em; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 4px solid #3498db;
+    font-size: 0.75em;
+  }
+  .card.green  { border-color: #2ecc71; }
+  .card.red    { border-color: #e74c3c; }
+  .card.yellow { border-color: #f39c12; }
+  .card.purple { border-color: #9b59b6; }
+
+  .kpi {
+    text-align: center;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .kpi .num { font-size: 2em; font-weight: bold; color: #2ecc71; }
+  .kpi .label { font-size: 0.7em; color: #aaa; margin-top: 4px; }
+
+  .tag {
+    display: inline-block;
+    background: #3498db22;
+    border: 1px solid #3498db;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.65em;
+    margin: 3px;
+    color: #3498db;
+  }
+
+  .pipeline-box {
+    background: rgba(52,152,219,0.12);
+    border: 1px solid #3498db55;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.72em;
+    text-align: center;
+  }
+  .arrow { font-size: 1.2em; color: #3498db; margin: 0 6px; }
+
+  table { font-size: 0.65em; width: 100%; }
+  th { background: #3498db33; color: #3498db; padding: 6px; }
+  td { padding: 5px 8px; border-bottom: 1px solid #ffffff11; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ── SLIDE 1 : TITRE ─────────────────────────────────────────────── -->
+<section>
+  <h1>Pipeline DataOps</h1>
+  <h1 style="color:#3498db">Chicago Crimes</h1>
+  <p style="color:#aaa; margin-top:30px;">Architecture d'un pipeline de données robuste</p>
+  <div style="margin-top:40px;">
+    <span class="tag">Apache Airflow</span>
+    <span class="tag">Soda Core</span>
+    <span class="tag">PostgreSQL</span>
+    <span class="tag">Streamlit</span>
+    <span class="tag">TaskGroup</span>
+    <span class="tag">Docker</span>
+  </div>
+  <p style="color:#666; margin-top:40px; font-size:0.6em;">Simplon — Formation Data Engineer · 2026</p>
+</section>
+
+<!-- ── SLIDE 2 : CONTEXTE ──────────────────────────────────────────── -->
+<section>
+  <h2>Contexte & Objectif</h2>
+  <div class="grid2" style="margin-top:30px;">
+    <div class="card">
+      <h3>Source de données</h3>
+      <p>API publique <strong>Chicago Data Portal</strong><br>
+      Données de criminalité depuis 2001<br>
+      ~8 millions d'enregistrements<br>
+      Mise à jour quotidienne</p>
+    </div>
+    <div class="card green">
+      <h3>Objectif</h3>
+      <p>Construire un pipeline <strong>DataOps complet</strong> :<br>
+      ingestion → qualité → transformation → chargement<br>
+      avec orchestration automatisée et dashboard de suivi</p>
+    </div>
+  </div>
+  <div style="margin-top:24px;">
+    <div class="kpi" style="display:inline-block; width:160px; margin:8px;">
+      <div class="num">1.9M</div>
+      <div class="label">lignes ingérées</div>
+    </div>
+    <div class="kpi" style="display:inline-block; width:160px; margin:8px;">
+      <div class="num">13</div>
+      <div class="label">colonnes</div>
+    </div>
+    <div class="kpi" style="display:inline-block; width:160px; margin:8px;">
+      <div class="num">~25min</div>
+      <div class="label">durée pipeline</div>
+    </div>
+    <div class="kpi" style="display:inline-block; width:160px; margin:8px;">
+      <div class="num">100%</div>
+      <div class="label">checks Soda passés</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SLIDE 3 : STACK ─────────────────────────────────────────────── -->
+<section>
+  <h2>Stack Technique</h2>
+  <div class="grid3" style="margin-top:24px;">
+    <div class="card">
+      <h3>Orchestration</h3>
+      <ul>
+        <li><strong>Apache Airflow 2.x</strong></li>
+        <li>Astro CLI (Docker)</li>
+        <li>TaskFlow API</li>
+        <li>TaskGroup</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Données</h3>
+      <ul>
+        <li><strong>PostgreSQL</strong></li>
+        <li>pandas</li>
+        <li>psycopg2</li>
+        <li>API REST Chicago</li>
+      </ul>
+    </div>
+    <div class="card yellow">
+      <h3>Qualité & Viz</h3>
+      <ul>
+        <li><strong>Soda Core</strong></li>
+        <li>Streamlit</li>
+        <li>Plotly</li>
+        <li>SodaCL (YAML)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card purple" style="margin-top:20px; font-size:0.7em;">
+    <h3>Performance</h3>
+    <p>Ingestion parallèle avec <strong>ThreadPoolExecutor</strong> — 5 workers simultanés — lots de 20 000 lignes — retry automatique en cas de timeout</p>
+  </div>
+</section>
+
+<!-- ── SLIDE 4 : ARCHITECTURE ─────────────────────────────────────── -->
+<section>
+  <h2>Architecture du Pipeline</h2>
+  <div style="margin-top:20px; font-family:monospace; font-size:0.72em; background:#111; border-radius:10px; padding:20px; text-align:left;">
+    <pre style="color:#ecf0f1; margin:0;">
+┌─────────────────────────────────────────────────────────┐
+│                     ORCHESTRATEUR (DAG)                  │
+│                                                          │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │  <span style="color:#3498db">TaskGroup : extraction</span>                        │   │
+│   │  ingest_data → load_raw_to_postgres → soda_raw  │   │
+│   └──────────────────────┬──────────────────────────┘   │
+│                           │                              │
+│          ┌────────────────┴────────────────┐             │
+│          ▼                                 ▼             │
+│   ┌──────────────────┐   ┌─────────────────────────┐    │
+│   │ <span style="color:#2ecc71">TaskGroup :</span>      │   │ <span style="color:#f39c12">TaskGroup : profiling</span>   │    │
+│   │ <span style="color:#2ecc71">transformation</span>   │   │ profiling_raw          │    │
+│   │ transform_data   │   └──────────────┬──────────┘    │
+│   │ load_clean_to_pg │                  │               │
+│   │ soda_clean       │                  │               │
+│   └──────────┬───────┘                  │               │
+│              └──────────────┬───────────┘               │
+│                             ▼                            │
+│              ┌──────────────────────────┐                │
+│              │ <span style="color:#9b59b6">TaskGroup : chargement</span>  │                │
+│              │ load_final_to_postgres   │                │
+│              └──────────────────────────┘                │
+└─────────────────────────────────────────────────────────┘</pre>
+  </div>
+</section>
+
+<!-- ── SLIDE 5 : TASKGROUP ────────────────────────────────────────── -->
+<section>
+  <h2>Choix architectural : TaskGroup</h2>
+  <div class="grid2" style="margin-top:20px;">
+    <div class="card red">
+      <h3>Avant — 4 DAGs séparés</h3>
+      <ul>
+        <li>TriggerDagRunOperator entre chaque étape</li>
+        <li>Latence de polling (15s entre chaque)</li>
+        <li>Code dupliqué (run_soda_check × 3)</li>
+        <li>Logs éparpillés sur 4 DAGs</li>
+        <li>Dépendances fragiles inter-DAGs</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Après — 1 DAG + TaskGroups</h3>
+      <ul>
+        <li>Un seul endroit pour tout le pipeline</li>
+        <li>Pas de latence entre les étapes</li>
+        <li>run_soda_check factorisé dans soda_utils.py</li>
+        <li>UI claire avec groupes collapsables</li>
+        <li>Parallélisation native (transformation + profiling)</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:20px; font-size:0.75em; color:#aaa;">
+    Les DAGs standalone sont conservés pour permettre une exécution indépendante de chaque étape si besoin.
+  </p>
+</section>
+
+<!-- ── SLIDE 6 : QUALITÉ SODA ─────────────────────────────────────── -->
+<section>
+  <h2>Contrôle Qualité — Soda Core</h2>
+  <div class="grid2" style="margin-top:16px;">
+    <div>
+      <h3 style="color:#3498db; font-size:0.8em;">Checks sur données brutes</h3>
+      <table>
+        <tr><th>Check</th><th>Règle</th></tr>
+        <tr><td>Table non vide</td><td>row_count > 0</td></tr>
+        <tr><td>ID non nul</td><td>missing_count(id) = 0</td></tr>
+        <tr><td>Type crime non nul</td><td>missing_count(primary_type) = 0</td></tr>
+        <tr><td>Date non nulle</td><td>missing_count(date) = 0</td></tr>
+        <tr><td>Unicité IDs</td><td>duplicate_count(id) = 0</td></tr>
+        <tr><td>Arrest booléen</td><td>invalid_count(arrest) = 0</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 style="color:#2ecc71; font-size:0.8em;">Checks sur données transformées</h3>
+      <table>
+        <tr><th>Check</th><th>Règle</th></tr>
+        <tr><td>Années cohérentes</td><td>2000 ≤ year ≤ 2025</td></tr>
+        <tr><td>Pas de doublons</td><td>duplicate_count(id) = 0</td></tr>
+        <tr><td>Heures valides</td><td>0 ≤ hour ≤ 23</td></tr>
+        <tr><td>Latitude Chicago</td><td>41.6 ≤ lat ≤ 42.1</td></tr>
+        <tr><td>Longitude Chicago</td><td>-87.9 ≤ lng ≤ -87.5</td></tr>
+        <tr><td>Crime type non nul</td><td>missing_count = 0</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card green" style="margin-top:16px; text-align:center;">
+    <strong>Résultats sauvegardés en PostgreSQL → visualisés dans le dashboard Streamlit</strong>
+  </div>
+</section>
+
+<!-- ── SLIDE 7 : DASHBOARD ────────────────────────────────────────── -->
+<section>
+  <h2>Dashboard Qualité — Streamlit</h2>
+  <div class="grid2" style="margin-top:20px;">
+    <div class="card">
+      <h3>Section Soda</h3>
+      <ul>
+        <li>KPIs : pass / fail / warn par scan</li>
+        <li>Pie chart répartition des checks</li>
+        <li>Tableau détaillé par dataset</li>
+        <li>Historique des scans dans le temps</li>
+        <li>Rafraîchissement automatique (30s)</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Section Données</h3>
+      <ul>
+        <li>KPI : lignes en production</li>
+        <li>Taux d'arrestation</li>
+        <li>Top 10 types de crimes (bar chart)</li>
+        <li>Évolution des crimes par année (line chart)</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:20px; background:#111; border-radius:8px; padding:12px; font-family:monospace; font-size:0.65em;">
+    $ streamlit run streamlit_app.py &nbsp;→&nbsp; <span style="color:#2ecc71">localhost:8501</span>
+  </div>
+</section>
+
+<!-- ── SLIDE 8 : RÉSULTATS ────────────────────────────────────────── -->
+<section>
+  <h2>Résultats</h2>
+  <div class="grid3" style="margin-top:30px;">
+    <div class="kpi">
+      <div class="num">1 946 907</div>
+      <div class="label">lignes en production</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:#3498db">~25 min</div>
+      <div class="label">durée pipeline complet</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:#f39c12">5</div>
+      <div class="label">workers parallèles</div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:24px;">
+    <div class="card green">
+      <h3>Checks Soda</h3>
+      <p>✅ Tous les checks passés<br>
+      Données brutes : 6 checks<br>
+      Données transformées : 9 checks</p>
+    </div>
+    <div class="card">
+      <h3>Tables PostgreSQL</h3>
+      <p><strong>chicago_crimes_raw</strong> → 78 MB<br>
+      <strong>chicago_crimes_final</strong> → 57 MB<br>
+      <strong>soda_scan_results</strong> → historique qualité</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── SLIDE 9 : CONCLUSION ───────────────────────────────────────── -->
+<section>
+  <h2>Conclusion</h2>
+  <div class="grid2" style="margin-top:20px;">
+    <div>
+      <h3>Ce qui a été réalisé</h3>
+      <ul style="font-size:0.75em;">
+        <li>Pipeline DataOps complet de bout en bout</li>
+        <li>Ingestion parallèle ~2M lignes depuis une API REST</li>
+        <li>Contrôle qualité automatisé avec Soda Core</li>
+        <li>Refactorisation avec TaskGroups Airflow</li>
+        <li>Dashboard de monitoring Streamlit</li>
+        <li>Configuration centralisée et code factorisé</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Points clés DataOps</h3>
+      <ul style="font-size:0.75em;">
+        <li><strong>Observabilité</strong> — logs Airflow + résultats Soda en base</li>
+        <li><strong>Fiabilité</strong> — retry automatique, checks qualité bloquants</li>
+        <li><strong>Maintenabilité</strong> — config centralisée, code DRY</li>
+        <li><strong>Performance</strong> — parallélisation multi-workers</li>
+        <li><strong>Lisibilité</strong> — TaskGroups dans l'UI Airflow</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:30px; text-align:center; color:#aaa; font-size:0.7em;">
+    Merci pour votre attention
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'slide',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+  });
+</script>
+</body>
+</html>

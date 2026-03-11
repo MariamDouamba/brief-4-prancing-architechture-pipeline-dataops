@@ -4,7 +4,6 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from psycopg2.extras import execute_values
-from soda.scan import Scan
 import requests
 import pandas as pd
 import os
@@ -14,20 +13,10 @@ import time
 sys.path.insert(0, "/usr/local/airflow/include")
 from pipeline_config import (
     API_URL, API_BATCH_SIZE, MAX_ROWS,
-    RAW_CSV, CLEAN_CSV, SODA_CONFIG, CHECKS_RAW, CHECKS_CLEAN,
+    RAW_CSV, CLEAN_CSV, CHECKS_RAW, CHECKS_CLEAN,
     POSTGRES_CONN_ID, RAW_COLS
 )
-
-
-def run_soda_check(checks_file: str, dataset: str) -> None:
-    scan = Scan()
-    scan.set_scan_definition_name(dataset)
-    scan.set_data_source_name("chicago_crimes_db")
-    scan.add_configuration_yaml_file(file_path=SODA_CONFIG)
-    scan.add_sodacl_yaml_file(file_path=checks_file)
-    scan.execute()
-    if scan.has_check_fails():
-        raise ValueError(f"Soda checks failed for {dataset}:\n{scan.get_logs_text()}")
+from soda_utils import run_soda_check
 
 
 @dag(
